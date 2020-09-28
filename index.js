@@ -32,7 +32,7 @@ app.post('/rooms', (req, res, next) => {
 io.on('connection', socket => {
     socket.on('ROOM:JOIN', ({roomId, userName}) => {
         socket.join(roomId);
-        rooms.get(roomId).get('users').socket(socket.id, userName);
+        rooms.get(roomId).get('users').set(socket.id, userName);
         const users = rooms.get(roomId).get('users').values();
         socket.to(roomId).broadcast.emit('ROOM:JOINED', users)
     });
