@@ -31,12 +31,11 @@ app.post('/rooms', (req, res, next) => {
 // Run when client connects
 io.on('connection', socket => {
     socket.on('ROOM:JOIN', ({roomId, userName}) => {
-        socket.join(roomId);
-        rooms.get(roomId).get('users').set(socket.id, userName);
-        const users = rooms.get(roomId).get('users').values();
-        socket.to(roomId).broadcast.emit('ROOM:JOINED', users)
+        socket.join(roomId); // подключение к определенной комнате
+        rooms.get(roomId).get('users').set(socket.id, userName); //сохранение данных в коллекцию
+        const users = [...rooms.get(roomId).get('users').values()]; // получение всех юзеров в данной комнате
+        socket.to(roomId).broadcast.emit('ROOM:JOINED', users) // отправка сокет запроса всем кроме меня
     });
-
     console.log(`user connection ${socket.id}`)
 });
 
