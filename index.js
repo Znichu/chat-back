@@ -1,52 +1,71 @@
 const http = require('http');
 const express = require('express');
 const socketio = require('socket.io');
-const cors = require('cors');
-
+const {formatMessage, roomMessages, getMessages} = require('./utils/messages');
+const {
+    userJoin,
+    getCurrentUser,
+    userLeave,
+    getRoomUsers
+} = require('./utils/users');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
 
-app.use(cors());
-app.use(express.json());
 
-const rooms = new Map();
-
-app.get('/rooms', (req, res, next) => {
-    res.json(rooms)
-});
-
-app.post('/rooms', (req, res, next) => {
-    const {roomId, userName} = req.body;
-    if (!rooms.has(roomId)) {
-        rooms.set(roomId, new Map([
-            ['users', new Map()],
-            ['messages', []]
-        ]))
-    }
-    res.send();
-})
+const botName = 'Chat Bot';
 
 // Run when client connects
-io.on('connection', socket => {
-    socket.on('ROOM:JOIN', ({roomId, userName}) => {
-        socket.join(roomId); // подключение к определенной комнате
-        rooms.get(roomId).get('users').set(socket.id, userName); //сохранение данных в коллекцию
-        const users = [...rooms.get(roomId).get('users').values()]; // получение всех юзеров в данной комнате
-        socket.to(roomId).broadcast.emit('ROOM:JOINED', users) // отправка сокет запроса всем кроме меня
+io.on('connection', (socket) => {
+    socket.on('joinRoom', ({ userName, roomId }) => {
+        const user = userJoin(socket.id, userName, roomId);
+        console.log(user)
+        socket.join(user.roomId);
+
+        // Welcome current user
+        socket.emit('message', formatMessage(botName, 'Welcome to Chat!'));
+
+        // Broadcast when a user connects
+        socket.broadcast
+            .to(user.roomId)
+            .emit('message', formatMessage(botName, `${user.userName} has joined the chat`));
+
+        // Send users and room info
+        io.to(user.roomId).emit('roomUsers', {
+            room: user.roomId,
+            users: getRoomUsers(user.roomId),
+            messages: getMessages(user.roomId),
+        });
     });
+
+    // Listen for chatMessage
+    socket.on('chatMessage', msg => {
+        const user = getCurrentUser(socket.id);
+
+        io.to(user.room).emit('message', formatMessage(user.userName, msg));
+    });
+
+    // Runs when client disconnects
     socket.on('disconnect', () => {
-        rooms.forEach((value, roomId) => {
-            if (value.get('users').delete(socket.id)) {
-                const users = [...rooms.get(roomId).get('users').values()];
-                socket.to(roomId).broadcast.emit('ROOM:LEAVE', users)
-            }
-        })
-    })
-    console.log(`user connection ${socket.id}`)
+        const user = userLeave(socket.id);
+
+        if (user) {
+            io.to(user.room).emit(
+                'message',
+                formatMessage(botName, `${user.username} has left the chat`)
+            );
+
+            // Send users and room info
+            io.to(user.roomId).emit('roomUsers', {
+                room: user.roomId,
+                users: getRoomUsers(user.roomId),
+                messages: getMessages(user.roomId),
+            });
+        }
+    });
 });
 
 const PORT = process.env.PORT || 7542;
 
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`, server.address().port ));
