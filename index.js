@@ -14,7 +14,7 @@ app.use(express.json());
 
 
 
-const botName = 'ChatCord Bot';
+const botName = 'Chat Bot';
 
 app.post('/rooms', (req, res) => {
     const {roomId, userName} = req.body;
@@ -32,12 +32,9 @@ io.on('connection', socket => {
         let data = { users: getUsers(roomId), messages: getMessages(roomId) };
         io.to(roomId).emit('ROOM:DATA_ROOM', data);
 
-        const msg = formatMessage(botName, `${userName} has joined the chat`);
-        socket.broadcast.to(roomId).emit('ROOM:NEW_MESSAGE', msg);
+        socket.broadcast.to(roomId).emit('ROOM:NEW_MESSAGE', formatMessage(botName, `${userName} has joined the chat`));
     });
     socket.on('ROOM:NEW_MESSAGE', ({roomId, userName, message }) => {
-        console.log({roomId, userName, message });
-
         let newMessage = formatMessage(userName, message);
         saveNewMessage(roomId, newMessage);
         io.to(roomId).emit('ROOM:NEW_MESSAGE', newMessage);
