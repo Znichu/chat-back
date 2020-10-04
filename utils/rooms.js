@@ -1,3 +1,6 @@
+const uuid = require('uuid');
+
+
 const rooms = new Map();
 
 //New room
@@ -8,6 +11,17 @@ const createRoom = (roomId) => {
             ['messages', []]
         ]))
     }
+}
+
+// Create chat data
+const getChatData = (roomId) => {
+    return  rooms.has(roomId)
+        ? {
+            users: getUsers(roomId),
+            messages: getMessages(roomId),
+        }
+        : { users: [], messages: [] };
+
 }
 
 //Get messages in the room
@@ -22,7 +36,7 @@ const saveNewMessage = (roomId, newMessage) => {
 
 //Save new user in the room
 const saveUser = (roomId, socketId, userName) => {
-    rooms.get(roomId).get('users').set(socketId, userName);
+    rooms.get(roomId).get('users').set(socketId, {id: uuid.v4(), userName} );
 }
 
 //Get users in the room
@@ -30,13 +44,14 @@ const getUsers = (roomId) => {
     return [...rooms.get(roomId).get('users').values()]
 }
 
+//Get user in the room
+const getUser = (roomId, socketId) => {
+    return [...rooms.get(roomId).get('users').get(socketId)]
+}
+
 //User leaves chat
-const userLeave = (socketId) => {
-    rooms.forEach((value, roomId) => {
-        if (value.get('users').delete(socketId)) {
-            return [...rooms.get(roomId).get('users').values()];
-        }
-    })
+const userLeave = (socketId, roomId) => {
+    rooms.get(roomId).get('users').delete(socketId)
 }
 
 module.exports = {
@@ -45,5 +60,7 @@ module.exports = {
     getMessages,
     userLeave,
     createRoom,
-    saveNewMessage
+    saveNewMessage,
+    getChatData,
+    getUser
 }

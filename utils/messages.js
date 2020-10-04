@@ -1,8 +1,10 @@
 const moment = require('moment');
+const uuid = require('uuid');
 
-const formatMessage = (username, text) => {
+const formatMessage = (userName, text) => {
     return {
-        username,
+        id: uuid.v4(),
+        userName,
         text,
         time: moment().format('h:mm a')
     };
