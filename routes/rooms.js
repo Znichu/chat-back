@@ -7,7 +7,6 @@ const rooms = express.Router();
 rooms.get('/rooms/:id', (req, res) => {
     const { id: roomId } = req.params;
     const data = getChatData(roomId);
-    console.log(data)
     res.json(data);
 });
 

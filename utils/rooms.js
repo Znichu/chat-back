@@ -35,8 +35,8 @@ const saveNewMessage = (roomId, newMessage) => {
 }
 
 //Save new user in the room
-const saveUser = (roomId, socketId, userName) => {
-    rooms.get(roomId).get('users').set(socketId, {id: uuid.v4(), userName} );
+const saveUser = (roomId, socketId, userName, urlAvatar) => {
+    rooms.get(roomId).get('users').set(socketId, {id: uuid.v4(), userName, urlAvatar} );
 }
 
 //Get users in the room
@@ -45,8 +45,8 @@ const getUsers = (roomId) => {
 }
 
 //Get user in the room
-const getUser = (roomId, socketId) => {
-    return [...rooms.get(roomId).get('users').get(socketId)]
+const getCurrentUser = (roomId, socketId) => {
+    return rooms.get(roomId).get('users').get(socketId)
 }
 
 //User leaves chat
@@ -62,5 +62,5 @@ module.exports = {
     createRoom,
     saveNewMessage,
     getChatData,
-    getUser
+    getCurrentUser
 }
