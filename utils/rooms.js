@@ -8,7 +8,8 @@ const createRoom = (roomId) => {
     if (!rooms.has(roomId)) {
         rooms.set(roomId, new Map([
             ['users', new Map()],
-            ['messages', []]
+            ['messages', []],
+            ['typers', new Map()]
         ]))
     }
 }
@@ -54,6 +55,21 @@ const userLeave = (socketId, roomId) => {
     rooms.get(roomId).get('users').delete(socketId)
 }
 
+//Save typers
+const saveTyper = (roomId, socketId, userName) => {
+    rooms.get(roomId).get('typers').set(socketId, {id: uuid.v4(), userName})
+}
+
+//Get all typers
+const getAllTypers = (roomId) => {
+    return [...rooms.get(roomId).get('typers').values()]
+}
+
+//Delete typer
+const deleteTyper = (roomId, socketId) => {
+    rooms.get(roomId).get('typers').delete(socketId)
+}
+
 module.exports = {
     getUsers,
     saveUser,
@@ -62,5 +78,8 @@ module.exports = {
     createRoom,
     saveNewMessage,
     getChatData,
-    getCurrentUser
+    getCurrentUser,
+    saveTyper,
+    getAllTypers,
+    deleteTyper
 }
