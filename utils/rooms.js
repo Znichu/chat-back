@@ -1,5 +1,5 @@
 const uuid = require('uuid');
-
+const {createAvatarUrl} = require('./avatar');
 
 const rooms = new Map();
 
@@ -36,7 +36,8 @@ const saveNewMessage = (roomId, newMessage) => {
 }
 
 //Save new user in the room
-const saveUser = (roomId, socketId, userName, urlAvatar) => {
+const saveUser = (roomId, socketId, userName) => {
+    const urlAvatar = createAvatarUrl();
     rooms.get(roomId).get('users').set(socketId, {id: uuid.v4(), userName, urlAvatar} );
 }
 

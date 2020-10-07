@@ -29,10 +29,10 @@ app.use('/chat', rooms);
 
 // Run when client connects
 io.on('connection', socket => {
-    socket.on('ROOM:JOIN', ({roomId, userName, urlAvatar}) => {
+    socket.on('ROOM:JOIN', ({roomId, userName}) => {
         socket.join(roomId);
 
-        saveUser(roomId, socket.id, userName, urlAvatar);
+        saveUser(roomId, socket.id, userName);
 
         // Send users
         const users = getUsers(roomId);
@@ -41,32 +41,24 @@ io.on('connection', socket => {
             users
         );
 
-        // Broadcast when a user connects
-        socket.broadcast.to(roomId).emit(
-            'ROOM:NEW_MESSAGE',
-            formatMessage(botName, `${userName} has joined the chat`)
-        );
-
         // Runs when client disconnects
         socket.on('disconnect', () => {
-            const user = getCurrentUser(roomId, socket.id);
             userLeave(socket.id, roomId);
             deleteTyper(roomId, socket.id);
             io.to(roomId).emit(
                 'ROOM:SET_USERS',
                 getUsers(roomId)
             );
-            io.to(roomId).emit(
-                'ROOM:NEW_MESSAGE',
-                formatMessage(botName, `${user.userName} has left the chat`)
-            );
         })
 
     });
 
     // Listen for chatMessage
-    socket.on('ROOM:NEW_MESSAGE', ({roomId, userName, message}) => {
-        const newMessage = formatMessage(userName, message);
+    socket.on('ROOM:NEW_MESSAGE', ({roomId, message}) => {
+        const newMessage = {
+            message: formatMessage(message),
+            user: getCurrentUser(roomId, socket.id)
+        };
         saveNewMessage(roomId, newMessage);
         io.to(roomId).emit(
             'ROOM:NEW_MESSAGE',
@@ -87,7 +79,6 @@ io.on('connection', socket => {
     socket.on('ROOM:USER_STOPPED_TYPING', ({roomId}) => {
         deleteTyper(roomId, socket.id);
         socket.broadcast.emit('ROOM:USER_STOPPED_TYPING', getAllTypers(roomId));
-        console.log(getAllTypers(roomId));
     });
 
     console.log(`user connection ${socket.id}`)
