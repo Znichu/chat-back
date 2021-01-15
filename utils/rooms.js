@@ -48,7 +48,7 @@ const getUsers = (roomId) => {
 
 //Get user in the room
 const getCurrentUser = (roomId, socketId) => {
-    return rooms.get(roomId).get('users').get(socketId)
+    return rooms.get(roomId).get('users').get(socketId);
 }
 
 //User leaves chat
